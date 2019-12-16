@@ -1,5 +1,7 @@
 import React, { Component } from "react";
 import { Icon, Card, TextareaAutosize, Button } from "@material-ui/core";
+import { connect } from "react-redux";
+import { addList, addCard } from "../store/actions";
 
 class ActionButton extends Component {
     state = {
@@ -24,6 +26,32 @@ class ActionButton extends Component {
             text: e.target.value
         });
     };
+
+    handleAddList = () => {
+        const { dispatch } = this.props;
+        const { text } = this.state;
+        if (text) {
+            this.setState({
+                text: ""
+            });
+            dispatch(addList(text))
+        }
+
+        return;
+    }
+
+    handleAddCard = () => {
+        const { dispatch, listID } = this.props;
+        const { text } = this.state;
+        if (text) {
+            this.setState({
+                text: ""
+            });
+            dispatch(addCard(listID, text))
+        }
+
+        return;
+    }
 
     renderAddButton = () => {
         const { list } = this.props;
@@ -78,6 +106,7 @@ class ActionButton extends Component {
             </Card>
             <div style={styles.formButtonGroup}>
                 <Button 
+                    onMouseDown={list ? this.handleAddList : this.handleAddCard}
                     variant="contained" 
                     style={{ color: "white", backgroundColor: "#5aac44"}}
                 >
@@ -108,6 +137,6 @@ const styles = {
         display: "flex",
         alignItems: "center"
     }
-}
+};
 
-export default ActionButton;
+export default connect()(ActionButton);

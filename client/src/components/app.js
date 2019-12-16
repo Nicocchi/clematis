@@ -15,7 +15,7 @@ class App extends React.Component {
         <div style={styles.listsContainer}>
           {
             lists.map(list => (
-              <List key={list.id} title={list.title} cards={list.cards} />
+              <List key={list.id} listID={list.id} title={list.title} cards={list.cards} />
           ))}
           <ActionButton list />
         </div>
