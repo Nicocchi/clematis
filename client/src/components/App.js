@@ -1,60 +1,16 @@
-import React from "react";
-import { hot } from 'react-hot-loader/root';
+import React, { PureComponent } from "react";
 import List from "./List";
 import { connect } from "react-redux";
-import ActionButton from "./ActionButton";
-import { DragDropContext } from "react-beautiful-dnd";
+import Create from "./Create";
+import { DragDropContext, Droppable } from "react-beautiful-dnd";
+import Routes from "../routes";
 import { sort } from "../store/actions";
-import styled from "styled-components";
+import { MainNavBar } from "./Navigation/MainNavBar";
 
-const ListContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-`
-
-class App extends React.Component {
-
-  onDragEnd = (result) => {
-    const { destination, source, draggableId } = result;
-
-    if (!destination) {
-      return;
-    }
-
-    this.props.dispatch(sort(
-      source.droppableId,
-      destination.droppableId,
-      source.index,
-      destination.index,
-      draggableId
-    ))
-  }
-
+class App extends PureComponent {
   render() {
-
-    const { lists } = this.props;
-
-    return (
-      <DragDropContext onDragEnd={this.onDragEnd}>
-        <div>
-          <h2>Clematis</h2>
-          <ListContainer>
-            {
-              lists.map(list => (
-                <List key={list.id} listID={list.id} title={list.title} cards={list.cards} />
-            ))}
-            <ActionButton list />
-          </ListContainer>
-          
-        </div>
-      </DragDropContext>
-    )
-
+    return <Routes />;
   }
 }
 
-const mapStateToProps = state => ({
-  lists: state.lists
-})
-
-export default hot(connect(mapStateToProps)(App));
+export default App;

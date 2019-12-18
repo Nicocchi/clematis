@@ -1,14 +1,23 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import App from "./components/App";
 import { Provider } from "react-redux";
-import store from "./store";
+import App from "./components/App";
 import "./styles.scss";
+import { createGlobalStyle } from "styled-components";
+// import $ from "jquery";
+import { PersistGate } from "redux-persist/integration/react";
+import Store from "./store";
+
+const { store } = Store();
 
 
 var rootElement = document.getElementById("root");
 ReactDOM.render(
     <Provider store={store}>
-        <App />
+      <App />
     </Provider>, 
 rootElement);
+
+// $(document).bind("DOMNodeRemoved", function(e) {
+//     console.log("Removed: " + e.target.nodeName);
+//   });

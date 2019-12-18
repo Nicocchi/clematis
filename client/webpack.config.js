@@ -1,5 +1,6 @@
 const webpack = require('webpack');
 const path = require('path');
+const HTMLWebpackPlugin = require('html-webpack-plugin');
 
 const config = {
   entry: [
@@ -18,16 +19,17 @@ const config = {
         exclude: /node_modules/
       },
       {
+        test: /\.(png|svg|jpg|jpeg|gif|ico)$/,
+        exclude: /node_modules/,
+        use: ['file-loader?name=[name].[ext]'] // ?name=[name].[ext] is only necessary to preserve the original file name
+      },
+      {
         test: /\.scss$/,
         use: [
           'style-loader',
           'css-loader',
           'sass-loader'
         ]
-      },
-      {
-        test: /\.svg$/,
-        use: 'file-loader'
       }
     ]
   },
@@ -44,7 +46,12 @@ const config = {
     contentBase: './public'
   },
   plugins: [
-    new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en/)
+    new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en/),
+    new HTMLWebpackPlugin({
+      template: './public/index.html',
+      filename: './index.html',
+      favicon: './public/favicon.ico'
+    })
   ]
 };
 
