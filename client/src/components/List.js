@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { PureComponent } from "react";
 import Card from "./Card";
 import Create from "./Create";
 import { Droppable, Draggable } from "react-beautiful-dnd";
@@ -50,96 +50,120 @@ const ListTitle = styled.h4`
     }
 `;
 
-const List = ({ title, cards, listID, index, dispatch }) => {
-    const [isEditing, setIsEditing] = useState(false);
-    const [listTitle, setListTitle] = useState(title);
+class List extends PureComponent {
+    state = {
+        isEditing: false,
+        listTitle: ""
+    };
 
-    const renderEditInput = () => {
+    renderEditInput = () => {
         return (
-            <form onSubmit={handleFinishEditing}>
+            <form onSubmit={this.handleFinishEditing}>
                 <StyledInput
                     type="text"
-                    value={listTitle}
-                    onChange={handleChange}
+                    value={this.props.listTitle}
+                    onChange={this.handleChange}
                     autoFocus
-                    onFocus={handleFocus}
-                    onBlur={handleFinishEditing}
+                    onFocus={this.handleFocus}
+                    onBlur={this.handleFinishEditing}
                 />
             </form>
         );
     };
 
-    const handleFocus = e => {
+    handleFocus = e => {
         e.target.select();
     };
 
-    const handleChange = e => {
+    handleChange = e => {
         e.preventDefault();
-        setListTitle(e.target.value);
+        this.setState({
+            listTitle: e.target.value
+        });
     };
 
-    const handleFinishEditing = e => {
-        setIsEditing(false);
-        dispatch(editTitle(listID, listTitle));
+    handleFinishEditing = e => {
+        this.setState({
+            isEditing: false
+        });
+        this.props.editTitle(this.props.listID, this.state.listTitle);
     };
 
-    const handleDeleteList = () => {
-        dispatch(deleteList(listID));
+    handleDeleteList = () => {
+        this.props.deleteList(this.props.listID);
     };
 
-    return (
-        <Draggable draggableId={String(listID)} index={index}>
-            {provided => (
-                <ListContainer
-                    {...provided.draggableProps}
-                    {...provided.dragHandleProps}
-                    ref={provided.innerRef}
-                >
-                    <Droppable droppableId={String(listID)} type="card">
-                        {provided => (
-                            <div>
+    render() {
+        return (
+            <Draggable
+                draggableId={String(this.props.listID)}
+                index={this.props.index}
+            >
+                {provided => (
+                    <ListContainer
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        ref={provided.innerRef}
+                    >
+                        <Droppable
+                            droppableId={String(this.props.listID)}
+                            type="card"
+                        >
+                            {provided => (
                                 <div>
-                                    {isEditing ? (
-                                        renderEditInput()
-                                    ) : (
-                                        <TitleContainer
-                                            onClick={() => setIsEditing(true)}
-                                        >
-                                            <ListTitle>{listTitle}</ListTitle>
-                                            <DeleteButton
-                                                onClick={handleDeleteList}
+                                    <div>
+                                        {this.state.isEditing ? (
+                                            renderEditInput()
+                                        ) : (
+                                            <TitleContainer
+                                                onClick={() =>
+                                                    setIsEditing(true)
+                                                }
                                             >
-                                                delete
-                                            </DeleteButton>
-                                        </TitleContainer>
-                                    )}
+                                                <ListTitle>
+                                                    {this.state.listTitle}
+                                                </ListTitle>
+                                                <DeleteButton
+                                                    onClick={
+                                                        this.handleDeleteList
+                                                    }
+                                                >
+                                                    delete
+                                                </DeleteButton>
+                                            </TitleContainer>
+                                        )}
+                                    </div>
+                                    <div
+                                        {...provided.droppableProps}
+                                        ref={provided.innerRef}
+                                    >
+                                        {this.props.cards.map((card, index) => (
+                                            <Card
+                                                key={card.id}
+                                                text={card.text}
+                                                id={card.id}
+                                                index={index}
+                                                listID={this.props.listID}
+                                                listTitle={this.state.listTitle}
+                                                description={card.description}
+                                                checklists={card.checklists}
+                                            />
+                                        ))}
+                                        {provided.placeholder}
+                                        <Create listID={this.props.listID} />
+                                    </div>
                                 </div>
-                                <div
-                                    {...provided.droppableProps}
-                                    ref={provided.innerRef}
-                                >
-                                    {cards.map((card, index) => (
-                                        <Card
-                                            key={card.id}
-                                            text={card.text}
-                                            id={card.id}
-                                            index={index}
-                                            listID={listID}
-                                            listTitle={listTitle}
-                                            description={card.description}
-                                            checklists={card.checklists}
-                                        />
-                                    ))}
-                                    {provided.placeholder}
-                                    <Create listID={listID} />
-                                </div>
-                            </div>
-                        )}
-                    </Droppable>
-                </ListContainer>
-            )}
-        </Draggable>
-    );
-};
+                            )}
+                        </Droppable>
+                    </ListContainer>
+                )}
+            </Draggable>
+        );
+    }
+}
 
-export default connect()(List);
+const mapStateToProps = state => ({
+    lists: state.lists
+});
+
+export default connect(mapStateToProps, { editTitle, deleteList })(List);
