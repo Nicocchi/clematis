@@ -56,6 +56,12 @@ class List extends PureComponent {
         listTitle: ""
     };
 
+    componentDidMount() {
+        this.setState({
+            listTitle: this.props.title
+        });
+    }
+
     renderEditInput = () => {
         return (
             <form onSubmit={this.handleFinishEditing}>
@@ -93,6 +99,10 @@ class List extends PureComponent {
         this.props.deleteList(this.props.listID);
     };
 
+    setIsEditing = () => {
+        this.setState({ isEditing: true })
+    }
+
     render() {
         return (
             <Draggable
@@ -117,7 +127,7 @@ class List extends PureComponent {
                                         ) : (
                                             <TitleContainer
                                                 onClick={() =>
-                                                    setIsEditing(true)
+                                                    this.setIsEditing
                                                 }
                                             >
                                                 <ListTitle>

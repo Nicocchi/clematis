@@ -4,10 +4,11 @@ const initialState = {
     "card-0": {
         id: `card-0`,
         list: "list-0",
-        text: "Wash dishes",
-        description: "Description test",
+        text: "Refactoring",
+        description: "I will add notes here for refactoring needs to clean up the code. When you make a pull request, have staff and/or peer review (Ready for QA) before merging",
         checklists: [
             {
+                id: `checklist-0`,
                 title: "Checklist 1",
                 content: [
                     {
@@ -21,14 +22,15 @@ const initialState = {
                 ]
             },
             {
+                id: `checklist-1`,
                 title: "Checklist 2",
                 content: [
                     {
-                        text: "Clean up branches",
+                        text: "Clean up branches 2",
                         checked: false
                     },
                     {
-                        text: "Clean up console logs",
+                        text: "Clean up console logs 2",
                         checked: true
                     }
                 ]
@@ -69,23 +71,29 @@ const cardsReducer = (state = initialState, action) => {
         }
 
         case CONSTANTS.EDIT_CARD_CHECKLIST_BOOL: {
-            console.log("EDIT");
             const { id, bool, index, index2 } = action.payload;
-            console.log("REDUCER FIRED", id, index, index2);
             const card = state[id];
-            console.log(
-                "Old card",
-                card.checklists[index].content[index2].checked
-            );
-            card.checklists[index].content[index2].checked = !card.checklists[
-                index
-            ].content[index2].checked;
-
-            console.log(
-                "new card",
-                card.checklists[index].content[index2].checked
-            );
+            card.checklists[index].content[index2].checked = !card.checklists[index].content[index2].checked;
             return { ...state, [`card-${id}`]: card };
+        }
+
+        case CONSTANTS.DELETE_CHECKLIST: {
+            const { id, checklistID } = action.payload;
+            const card = state[id];
+            const newChecklists = card.checklists.filter(checklist => checklist.id !== checklistID);
+            card.checklists = newChecklists;
+            return { ...state, [id]: card };
+        }
+
+        case CONSTANTS.ADD_CHECKLIST_ITEM: {
+            const { id, checklistID, text } = action.payload;
+            const card = state[id];
+            let checklist = card.checklists.filter(checklist => checklist.id === checklistID);
+            checklist[0].content.push({
+                text: text,
+                checked: false
+            });
+            return { ...state, [id]: card };
         }
 
         default:

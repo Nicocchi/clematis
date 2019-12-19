@@ -6,7 +6,7 @@ import { Draggable } from "react-beautiful-dnd";
 import styled from "styled-components";
 import Icon from "@material-ui/core/Icon";
 import Form from "./Form";
-import { editCard, deleteCard, editChecklistBool } from "../store/actions";
+import { editCard, deleteCard, editChecklistBool, deleteChecklist, addChecklistItem } from "../store/actions";
 import { connect } from "react-redux";
 import Button from "./Button";
 import Dialog from "@material-ui/core/Dialog";
@@ -23,6 +23,8 @@ import AssignmentIcon from "@material-ui/icons/Assignment";
 import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import store from "../store/index";
+import { TextareaAutosize } from "@material-ui/core";
+import Checklist from "./Checklist";
 
 const CardContainer = styled.div`
     margin: 0 0 8px 0;
@@ -80,11 +82,7 @@ const DialogTitle = withStyles(styles)(props => {
         <MuiDialogTitle disableTypography className={classes.root} {...other}>
             <Typography variant="h6">{children}</Typography>
             {onClose ? (
-                <IconButton
-                    aria-label="close"
-                    className={classes.closeButton}
-                    onClick={onClose}
-                >
+                <IconButton aria-label="close" className={classes.closeButton} onClick={onClose}>
                     <CloseIcon />
                 </IconButton>
             ) : null}
@@ -106,11 +104,26 @@ const DialogActions = withStyles(theme => ({
 }))(MuiDialogActions);
 
 class Card extends React.PureComponent {
-    state = {
-        isEditng: false,
-        cardText: "",
-        open: false
-    };
+    constructor(props) {
+        super(props);
+        this.state = {
+            isEditng: false,
+            isEditingDesc: false,
+            cardText: "",
+            cardDesc: "",
+            open: false
+        };
+
+        this.saveCard = this.saveCard.bind(this);
+    }
+
+    componentDidMount() {
+        const card = this.props.cards[this.props.id];
+        this.setState({
+            cardText: this.props.text,
+            cardDesc: card.description
+        });
+    }
 
     handleClickOpen = () => {
         this.setState({ open: true });
@@ -121,37 +134,57 @@ class Card extends React.PureComponent {
     };
 
     closeForm = e => {
-        this.setState({ isEditing: false });
+        this.setState({ isEditing: false, isEditingDesc: false, isAddingItem: false, checklistItem: "" });
+    };
+
+    openForm = e => {
+        this.setState({ isEditing: true });
+    };
+
+    openFormDesc = e => {
+        e.preventDefault();
+        this.setState({ isEditingDesc: true });
     };
 
     handleChange = e => {
         this.setState({ cardText: e.target.value });
     };
 
+    handleChangeDesc = e => {
+        this.setState({ cardDesc: e.target.value });
+    };
+
     saveCard = e => {
         e.preventDefault();
-        dispatch(editCard(id, listID, cardText));
-        this.setState({ isEditing: false });
+        this.props.editCard(this.props.id, this.props.listID, this.state.cardText);
+        this.setState({ isEditing: false, isEditingDesc: false, isAddingItem: false });
     };
 
     handleDeleteCard = e => {
-        dispatch(deleteCard(id, listID));
+        this.props.deleteCard(this.props.id, this.props.listID);
+    };
+
+    handleDeleteChecklist = (e, id) => {
+        this.props.deleteChecklist(this.props.id, id);
     };
 
     renderEditForm = () => {
         return (
-            <Form
-                text={this.state.cardText}
-                onChange={this.handleChange}
-                closeForm={this.closeForm}
-            >
+            <Form single={true} text={this.state.cardText} onChange={this.handleChange} closeForm={this.closeForm} saveCard={e => this.saveCard(e)}>
+                <Button onClick={this.saveCard}>Save</Button>
+            </Form>
+        );
+    };
+
+    renderEditDesc = card => {
+        return (
+            <Form width="100%" text={this.state.cardDesc} onChange={this.handleChangeDesc} closeForm={this.closeForm}>
                 <Button onClick={this.saveCard}>Save</Button>
             </Form>
         );
     };
 
     handleChangeChecklistBool = (index, index2) => e => {
-        e.preventDefault();
         this.props.editChecklistBool(this.props.id, index, index2);
     };
 
@@ -170,33 +203,19 @@ class Card extends React.PureComponent {
     };
 
     render() {
-        console.log("Cards", this.props);
         const card = this.props.cards[this.props.id];
 
         return this.state.isEditing ? (
-            renderEditForm()
+            this.renderEditForm()
         ) : (
-            <Draggable
-                draggableId={String(this.props.id)}
-                index={this.props.index}
-            >
+            <Draggable draggableId={String(this.props.id)} index={this.props.index}>
                 {provided => (
-                    <CardContainer
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        ref={provided.innerRef}
-                    >
-                        <MCard onDoubleClick={() => this.closeForm()}>
-                            <EditButton
-                                onMouseDown={this.handleClickOpen}
-                                fontSize="small"
-                            >
+                    <CardContainer {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
+                        <MCard onDoubleClick={() => this.openForm()} onClick={this.handleClickOpen}>
+                            <EditButton onMouseDown={() => this.openForm()} fontSize="small">
                                 edit
                             </EditButton>
-                            <DeleteButton
-                                fontSize="small"
-                                onMouseDown={this.handleDeleteCard}
-                            >
+                            <DeleteButton fontSize="small" onMouseDown={this.handleDeleteCard}>
                                 delete
                             </DeleteButton>
 
@@ -204,21 +223,10 @@ class Card extends React.PureComponent {
                                 <Typography>{this.props.text}</Typography>
                             </CardContent>
                         </MCard>
-                        <Dialog
-                            onClose={this.handleClose}
-                            aria-labelledby="customized-dialog-title"
-                            open={this.state.open}
-                            maxWidth="sm"
-                            fullWidth={true}
-                        >
-                            <DialogTitle
-                                id="customized-dialog-title"
-                                onClose={this.handleClose}
-                            >
+                        <Dialog scroll="body" onClose={this.handleClose} aria-labelledby="customized-dialog-title" open={this.state.open} maxWidth="sm" fullWidth={true}>
+                            <DialogTitle id="customized-dialog-title" onClose={this.handleClose}>
                                 {this.props.text}
-                                <Typography>
-                                    In list {this.props.listTitle}
-                                </Typography>
+                                <Typography>In list {this.props.listTitle}</Typography>
                             </DialogTitle>
 
                             <DialogContent dividers>
@@ -228,132 +236,30 @@ class Card extends React.PureComponent {
                                         fontWeight: "bold",
                                         display: "flex",
                                         justifyContent: "space-between"
-                                    }}
-                                >
+                                    }}>
                                     <div
                                         style={{
                                             display: "flex",
                                             alignItems: "center"
-                                        }}
-                                    >
-                                        <AssignmentIcon
-                                            style={{ marginRight: "10px" }}
-                                            fontSize="large"
-                                        />
+                                        }}>
+                                        <AssignmentIcon style={{ marginRight: "10px" }} fontSize="large" />
                                         <Typography>Description</Typography>
                                     </div>
-                                    <Button
-                                        autoFocus
-                                        onClick={this.handleClose}
-                                        color="primary"
-                                    >
+                                    <Button autoFocus onClick={this.openFormDesc} color="primary">
                                         Edit
                                     </Button>
                                 </div>
-                                <Typography
-                                    gutterBottom
-                                    style={{ paddingLeft: "47px" }}
-                                >
-                                    {this.props.description}
-                                </Typography>
+                                <div onClick={this.openFormDesc} style={{ paddingLeft: "47px", cursor: "pointer" }}>
+                                    {this.state.isEditingDesc ? this.renderEditDesc(card) : this.state.cardDesc}
+                                </div>
                                 <div style={{}}>
                                     {card.checklists.length > 0
                                         ? card.checklists.map((list, index) => (
-                                              <div key={index}>
-                                                  <div
-                                                      style={{
-                                                          padding:
-                                                              "20px 20px 20px 0",
-                                                          fontWeight: "bold",
-                                                          display: "flex",
-                                                          justifyContent:
-                                                              "space-between"
-                                                      }}
-                                                  >
-                                                      <div
-                                                          style={{
-                                                              display: "flex",
-                                                              alignItems:
-                                                                  "center"
-                                                          }}
-                                                      >
-                                                          <AssignmentTurnedInIcon
-                                                              style={{
-                                                                  marginRight:
-                                                                      "10px"
-                                                              }}
-                                                              fontSize="large"
-                                                          />
-                                                          <Typography>
-                                                              {list.title}
-                                                          </Typography>
-                                                      </div>
-                                                      <Button
-                                                          autoFocus
-                                                          onClick={
-                                                              this.handleClose
-                                                          }
-                                                          color="primary"
-                                                      >
-                                                          Delete
-                                                      </Button>
-                                                  </div>
-                                                  <LinearProgress
-                                                      variant="determinate"
-                                                      value={this.checklistValue(
-                                                          list
-                                                      )}
-                                                  />
-                                                  {list.content.length > 0
-                                                      ? list.content.map(
-                                                            (con, ind) => (
-                                                                <FormGroup
-                                                                    column="true"
-                                                                    key={ind}
-                                                                >
-                                                                    <FormControlLabel
-                                                                        control={
-                                                                            <Checkbox
-                                                                                style={{
-                                                                                    paddingRight:
-                                                                                        "20px",
-                                                                                    paddingLeft:
-                                                                                        "15px"
-                                                                                }}
-                                                                                checked={
-                                                                                    con.checked
-                                                                                }
-                                                                                onChange={this.handleChangeChecklistBool(
-                                                                                    index,
-                                                                                    ind
-                                                                                )}
-                                                                                value={
-                                                                                    con.checked
-                                                                                }
-                                                                            />
-                                                                        }
-                                                                        label={
-                                                                            con.text
-                                                                        }
-                                                                    />
-                                                                </FormGroup>
-                                                            )
-                                                        )
-                                                      : null}
-                                              </div>
+                                              <Checklist closeForm={this.closeForm} handleDeleteChecklist={this.handleDeleteChecklist} key={list.id} index={index} list={list} id={this.props.id} listID={this.props.listID} cardText={this.state.cardText} checklistID={list.id} />
                                           ))
                                         : null}
                                 </div>
                             </DialogContent>
-                            <DialogActions>
-                                <Button
-                                    autoFocus
-                                    onClick={this.handleClose}
-                                    color="primary"
-                                >
-                                    Save changes
-                                </Button>
-                            </DialogActions>
                         </Dialog>
                     </CardContainer>
                 )}
@@ -369,5 +275,9 @@ function mapStateToProps(state) {
 }
 
 export default connect(mapStateToProps, {
-    editChecklistBool
+    editChecklistBool,
+    editCard,
+    deleteCard,
+    deleteChecklist,
+    addChecklistItem
 })(Card);

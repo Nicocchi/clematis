@@ -31,3 +31,17 @@ export const editChecklistBool = (id, index, index2) => {
         });
     };
 };
+
+export const deleteChecklist = (id, checklistID) => {
+    return {
+        type: CONSTANTS.DELETE_CHECKLIST,
+        payload: { id, checklistID }
+    };
+};
+
+export const addChecklistItem = (id, checklistID, text) => {
+    return {
+        type: CONSTANTS.ADD_CHECKLIST_ITEM,
+        payload: { id, checklistID, text }
+    };
+};
