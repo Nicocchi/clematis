@@ -6,7 +6,7 @@ import { Draggable } from "react-beautiful-dnd";
 import styled from "styled-components";
 import Icon from "@material-ui/core/Icon";
 import Form from "./Form";
-import { editCard, deleteCard, editChecklistBool, deleteChecklist, addChecklistItem } from "../store/actions";
+import { editCard, deleteCard, editChecklistBool, deleteChecklist, addChecklistItem, addChecklist } from "../store/actions";
 import { connect } from "react-redux";
 import Button from "./Button";
 import Dialog from "@material-ui/core/Dialog";
@@ -109,8 +109,10 @@ class Card extends React.PureComponent {
         this.state = {
             isEditng: false,
             isEditingDesc: false,
+            isAddingChecklist: false,
             cardText: "",
             cardDesc: "",
+            checklistTitle: "",
             open: false
         };
 
@@ -134,7 +136,7 @@ class Card extends React.PureComponent {
     };
 
     closeForm = e => {
-        this.setState({ isEditing: false, isEditingDesc: false, isAddingItem: false, checklistItem: "" });
+        this.setState({ isEditing: false, isEditingDesc: false, isAddingItem: false, checklistItem: "", isAddingChecklist: false });
     };
 
     openForm = e => {
@@ -157,7 +159,7 @@ class Card extends React.PureComponent {
     saveCard = e => {
         e.preventDefault();
         this.props.editCard(this.props.id, this.props.listID, this.state.cardText);
-        this.setState({ isEditing: false, isEditingDesc: false, isAddingItem: false });
+        this.setState({ isEditing: false, isEditingDesc: false, isAddingItem: false, isAddingChecklist: false });
     };
 
     handleDeleteCard = e => {
@@ -184,6 +186,25 @@ class Card extends React.PureComponent {
         );
     };
 
+    handleChangeChecklistTitle = e => {
+        e.preventDefault();
+        this.setState({ checklistTitle: e.target.value });
+    };
+
+    renderAddChecklist = card => {
+        console.log("RENDER");
+        return (
+            <Form
+                width="100%"
+                text={this.state.checklistTitle}
+                onChange={e => this.handleChangeChecklistTitle(e)}
+                saveCard={e => this.addNewChecklist(this.state.checklistTitle, e)}
+                closeForm={this.closeForm}>
+                <Button onClick={e => this.addNewChecklist(this.state.checklistTitle, e)}>Save</Button>
+            </Form>
+        );
+    };
+
     handleChangeChecklistBool = (index, index2) => e => {
         this.props.editChecklistBool(this.props.id, index, index2);
     };
@@ -200,6 +221,17 @@ class Card extends React.PureComponent {
             return (value * 100) / length;
         }
         return 0;
+    };
+
+    addNewChecklist = (text, e) => {
+        console.log("FIRED", e);
+        this.props.addChecklist(this.props.id, text);
+        this.saveCard(e);
+    };
+
+    handleOpenChecklistEdit = e => {
+        e.preventDefault();
+        this.setState({ isAddingChecklist: true });
     };
 
     render() {
@@ -228,7 +260,13 @@ class Card extends React.PureComponent {
                                 {this.props.text}
                                 <Typography>In list {this.props.listTitle}</Typography>
                             </DialogTitle>
-
+                            {this.state.isAddingChecklist ? (
+                                this.renderAddChecklist(card)
+                            ) : (
+                                <Button autoFocus onClick={e => this.handleOpenChecklistEdit(e)} color="primary">
+                                    Add New Checklist
+                                </Button>
+                            )}
                             <DialogContent dividers>
                                 <div
                                     style={{
@@ -249,13 +287,23 @@ class Card extends React.PureComponent {
                                         Edit
                                     </Button>
                                 </div>
-                                <div onClick={this.openFormDesc} style={{ paddingLeft: "47px", cursor: "pointer" }}>
+                                <div onClick={this.openFormDesc} style={{ paddingLeft: "47px", cursor: "pointer", width: "80%" }}>
                                     {this.state.isEditingDesc ? this.renderEditDesc(card) : this.state.cardDesc}
                                 </div>
                                 <div style={{}}>
                                     {card.checklists.length > 0
                                         ? card.checklists.map((list, index) => (
-                                              <Checklist closeForm={this.closeForm} handleDeleteChecklist={this.handleDeleteChecklist} key={list.id} index={index} list={list} id={this.props.id} listID={this.props.listID} cardText={this.state.cardText} checklistID={list.id} />
+                                              <Checklist
+                                                  closeForm={this.closeForm}
+                                                  handleDeleteChecklist={this.handleDeleteChecklist}
+                                                  key={list.id}
+                                                  index={index}
+                                                  list={list}
+                                                  id={this.props.id}
+                                                  listID={this.props.listID}
+                                                  cardText={this.state.cardText}
+                                                  checklistID={list.id}
+                                              />
                                           ))
                                         : null}
                                 </div>
@@ -279,5 +327,6 @@ export default connect(mapStateToProps, {
     editCard,
     deleteCard,
     deleteChecklist,
-    addChecklistItem
+    addChecklistItem,
+    addChecklist
 })(Card);

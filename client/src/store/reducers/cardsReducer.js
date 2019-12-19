@@ -96,6 +96,18 @@ const cardsReducer = (state = initialState, action) => {
             return { ...state, [id]: card };
         }
 
+        case CONSTANTS.ADD_CHECKLIST: {
+            const { id, checklistID, text } = action.payload;
+            const card = state[id];
+            card.checklists.push({
+                id: checklistID,
+                title: text,
+                content: []
+            });
+
+            return { ...state, [id]: card };
+        }
+
         default:
             return state;
     }

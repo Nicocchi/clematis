@@ -45,3 +45,11 @@ export const addChecklistItem = (id, checklistID, text) => {
         payload: { id, checklistID, text }
     };
 };
+
+export const addChecklist = (id, text) => {
+    const checklistID = shortid.generate();
+    return {
+        type: CONSTANTS.ADD_CHECKLIST,
+        payload: { id, checklistID, text }
+    };
+};
