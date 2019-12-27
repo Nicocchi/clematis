@@ -1,6 +1,7 @@
 const webpack = require("webpack");
 const path = require("path");
 const HTMLWebpackPlugin = require("html-webpack-plugin");
+const CopyPlugin = require("copy-webpack-plugin");
 
 const config = {
     entry: ["react-hot-loader/patch", "./src/index.js"],
@@ -41,7 +42,11 @@ const config = {
             template: "./public/index.html",
             filename: "./index.html",
             favicon: "./public/favicon.ico"
-        })
+        }),
+        new CopyPlugin([
+            { from: "src", to: "dist" },
+            { from: "public", to: "dist" }
+        ])
     ]
 };
 
