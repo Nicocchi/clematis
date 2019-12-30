@@ -178,29 +178,13 @@ export default function MainNavBar() {
           </IconButton> */}
           <div className={classes.search}>
             <Link to="/" style={{textDecoration: "none", color: "inherit"}}>
-              {/* <IconButton aria-label="Home" color="inherit">
-                  <HomeIcon />
-              </IconButton> */}
               <Button color="inherit"><HomeIcon /></Button>
             </Link>
           </div>
           <div className={classes.search}>
             <Link to="/" style={{textDecoration: "none", color: "inherit"}}><Button color="inherit">Boards</Button></Link>
           </div>
-          
-          {/* <div className={classes.search}>
-            <div className={classes.searchIcon}>
-              <SearchIcon />
-            </div>
-            <InputBase
-              placeholder="Search…"
-              classes={{
-                root: classes.inputRoot,
-                input: classes.inputInput,
-              }}
-              inputProps={{ 'aria-label': 'search' }}
-            />
-          </div> */}
+
           <Link to="/" style={{width: '100%', textDecoration: "none", color: "inherit"}}>
             <Typography className={classes.title} variant="h6" noWrap>
               <img src="/images/clematis.svg" atl="logo" style={{width: 30, height: 30}} />
